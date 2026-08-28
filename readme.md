@@ -32,14 +32,19 @@ Powered by the `CH552G`, a generic `0.91" 128x32 SSD1305`, and a `WS2812B-2020` 
 | U1         | SOIC-16_3.9x9.9mm_P1.27mm        | 1        | CH552G              | C111292     | $0.74 |
 | U2         | ER_OLEDM0.91_1x-I2C_NoCtyd       | 1        | ER_OLEDM0.91_1x-I2C |             | $1.20 |
 
-**PCB Fabrication Cost:** $21.9
+**PCB Fabrication Cost:** $20.62
 
-**PCBA (2) and Parts:** $44.45
+**PCBA (2) and Parts:** $15.43
 
-**Total with shipping:** $76.97
+**Total with shipping:** $45.74
 
 or, with 5 assembled:
 
-**PCBA (5) and Parts:** $47.03
+**PCBA (5) and Parts:** $18.03
 
-**Total with shipping:** $79.55
+**Total with shipping:** $48.72
+
+**Discounts (not accounted in total)**
+
+- -$2.00 JLCONE App
+- -$20.00 Coupon
