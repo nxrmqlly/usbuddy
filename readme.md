@@ -36,11 +36,10 @@ Powered by the `CH552G`, a generic `0.91" 128x32 SSD1305`, and a `WS2812B-2020` 
 
 | Option                 | Qty | PCB Fabrication | PCBA & Parts | OLED + LED | Shipping |  **Total** |
 | ---------------------- | --: | --------------: | -----------: | ---------: | -------: | ---------: |
-| **2 assembled (ENIG)** |   2 |          $20.62 |       $15.43 |      $4.00 |    $9.69 | **$49.74** |
-| **5 assembled (ENIG)** |   5 |          $20.62 |       $18.03 |     $10.00 |   $10.07 | **$58.72** |
-| **5 assembled (HASL)** |   5 |           $4.00 |       $18.17 |     $10.00 |    $9.93 | **$42.10** |
+| **5 assembled (ENIG)** |   5 |          $20.62 |       $18.03 |      $6.00 |    $9.92 | **$54.57** |
+| **5 assembled (HASL)** |   5 |           $4.00 |       $18.03 |      $6.00 |    $9.92 | **$39.95** |
 
 ### Discounts (not accounted in total)
 
 - -$2.00 JLCONE App
-- -$20.00 Coupon
+- -$9.00 PCBA Coupon
