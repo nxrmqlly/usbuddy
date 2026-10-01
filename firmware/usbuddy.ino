@@ -27,9 +27,9 @@
 #define SCL_PIN  16
 #define SDA_PIN  17
 
-// 1 to flip, 0 to not
-#define H_FLIP 1
-#define V_FLIP 1
+// 1 to flip
+#define H_FLIP 0
+#define V_FLIP 0
 
 #define OLED_ADDR  0x78   // 0x3C << 1
 #define OLED_COLS  128
@@ -321,8 +321,10 @@ void setup() {
   digitalWrite(LED_PIN, LED_OFF);
 
   oledInit();
-  oledPrint(0, "*-^-^-* hello *-^-^-*");
-  oledPrint(1, "-> ready.");
+  oledPrint(0, "^^^^^^^ hallo ^^^^^^^");
+  oledPrint(1, "cmds: TEXT:, LED:,   ");
+  oledPrint(2, "      LINE1/2/3:,    ");
+  oledPrint(3, "      CLEAR          ");
 }
 
 void loop() {
