@@ -27,8 +27,8 @@
 #define SCL_PIN  16
 #define SDA_PIN  17
 
-#define H_FLIP 0
-#define V_FLIP 0
+#define H_FLIP 1
+#define V_FLIP 1
 
 #define OLED_ADDR  0x78   // 0x3C << 1
 #define OLED_COLS  128
