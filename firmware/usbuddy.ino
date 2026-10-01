@@ -6,15 +6,15 @@
  *
  *   P3.7 : D-
  *   P3.6 : D+
- *   P1.6 : SCL 
- *   P1.7 : SDA 
- *   P1.5 : LED : active low
- *
+ *   P1.6 : SCL
+ *   P1.7 : SDA
+ *   P1.5 : LED  : active low
+
  * Commands:
  *   TEXT:hello      -> clears the screen, prints on line 0
  *   LINE1:hello     -> prints on line 1 (also LINE2:, LINE3:)
- *   CLEAR           -> clears the screen
- *   LED:r,g,b       -> any value > 0 turns LED on, all zero turns it off
+ *   CLEAR           -> clear screen
+ *   LED:255         -> set LED brightness
  */
 
 #include <stdlib.h>
@@ -27,6 +27,7 @@
 #define SCL_PIN  16
 #define SDA_PIN  17
 
+// 1 to flip, 0 to not
 #define H_FLIP 1
 #define V_FLIP 1
 
@@ -134,6 +135,9 @@ static const uint8_t __code font5x7[] = {
   0x08,0x04,0x08,0x10,0x08  // ~
 };
 
+/* ---------------- bit banged I2C (w/o, no r) ----------------
+ * never reads back, and the ACK clock is just ignored.        */
+
 static void i2cStart(void) {
   digitalWrite(SDA_PIN, HIGH);
   digitalWrite(SCL_PIN, HIGH);
@@ -161,6 +165,7 @@ static void i2cWrite(uint8_t b) {
   digitalWrite(SCL_PIN, LOW);
 }
 
+/* ---------------- SSD1306 ---------------- */
 
 static void oledCmd(uint8_t c) {
   i2cStart();
@@ -182,7 +187,7 @@ static void oledClear(void) {
     oledSetPos(p, 0);
     i2cStart();
     i2cWrite(OLED_ADDR);
-    i2cWrite(0x40);      // control byte: data
+    i2cWrite(0x40);           // control byte: data
     for (c = 0; c < OLED_COLS; c++) i2cWrite(0x00);
     i2cStop();
   }
@@ -198,7 +203,7 @@ static void oledInit(void) {
   pinMode(SDA_PIN, OUTPUT);
   digitalWrite(SCL_PIN, HIGH);
   digitalWrite(SDA_PIN, HIGH);
-  delay(100);            // let the display power up
+  delay(100);                            // let the display power up
 
   oledCmd(0xAE);                         // display off
   oledCmd(0xD5); oledCmd(0x80);          // clock divide
@@ -242,8 +247,42 @@ static void oledPrint(uint8_t line, const char *s) {
   i2cStop();
 }
 
+/* ---------------- serial cmd handling ---------------- */
+
+// Parse "r,g,b" (or just one number)
+static uint8_t parseMaxValue(const char *p) {
+  uint8_t best = 0, count = 0;
+  uint16_t n;
+  while (*p && count < 3) {
+    while (*p == ' ') p++;
+    n = 0;
+    while (*p >= '0' && *p <= '9') {
+      n = n * 10 + (*p - '0');
+      if (n > 255) n = 255;
+      p++;
+    }
+    if ((uint8_t)n > best) best = (uint8_t)n;
+    count++;
+    while (*p && *p != ',') p++;   // skip to next value
+    if (*p == ',') p++;
+  }
+  return best;
+}
+
+static void sendStr(const char *s) {
+  while (*s) USBSerial_write(*s++);
+}
+
+static void sendU8(uint8_t n) {
+  if (n >= 100) USBSerial_write('0' + n / 100);
+  if (n >= 10)  USBSerial_write('0' + (n / 10) % 10);
+  USBSerial_write('0' + n % 10);
+}
+
 static char lineBuf[40];
 static uint8_t lineIdx = 0;
+static uint8_t ledDuty = 0;    // 0..255 brightness
+static uint8_t ledPhase = 0;   // software PWM counter
 static uint8_t hFlip = H_FLIP;
 static uint8_t vFlip = V_FLIP;
 
@@ -267,17 +306,13 @@ static void handleCommand(char *cmd) {
 
   } else if (strcmp(cmd, "CLEAR") == 0) {
     oledClear();
+    sendStr("Cleared Screen");
 
   } else if (strncmp(cmd, "LED:", 4) == 0) {
-    // parse "r,g,b" by hand (sscanf is far too big for 16 KB flash)
-    char *p = cmd + 4;
-    uint8_t on = 0, i;
-    for (i = 0; i < 3; i++) {
-      if (atoi(p) > 0) on = 1;
-      while (*p && *p != ',') p++;
-      if (*p == ',') p++;
-    }
-    digitalWrite(LED_PIN, on ? LED_ON : LED_OFF);
+    ledDuty = parseMaxValue(cmd + 4);   // loop() does the PWM
+    sendStr("LED=");
+    sendU8(ledDuty);
+    sendStr("\n");
   }
 }
 
@@ -291,13 +326,19 @@ void setup() {
 }
 
 void loop() {
+  // bitbang: software pwm: 64 steps per cycle
+  ledPhase += 4;
+  digitalWrite(LED_PIN, (ledPhase < ledDuty) ? LED_ON : LED_OFF);
+
   while (USBSerial_available()) {
     char c = USBSerial_read();
-    if (c == '\n' || lineIdx >= sizeof(lineBuf) - 1) {
-      lineBuf[lineIdx] = '\0';
-      lineIdx = 0;
-      handleCommand(lineBuf);
-    } else if (c != '\r') {
+    if (c == '\n' || c == '\r' || lineIdx >= sizeof(lineBuf) - 1) {
+      if (lineIdx > 0) {
+        lineBuf[lineIdx] = '\0';
+        lineIdx = 0;
+        handleCommand(lineBuf);
+      }
+    } else {
       lineBuf[lineIdx++] = c;
     }
   }
